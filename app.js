@@ -154,6 +154,13 @@ const server = app.listen(PORT, () => {
 
 const shutdown = () => {
   console.log('Shutting down...');
+
+  try {
+    fs.writeFileSync(path.join(__dirname, CONFIG), yaml.dump(config));
+  } catch (error) {
+    console.error('Error writing config:', error);
+  }
+
   server.close(() => process.exit(0));
 };
 
