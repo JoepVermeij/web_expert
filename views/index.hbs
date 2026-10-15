@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>YAML-JSON Server</title>
+</head>
+<body>
+  <h1>YAML-JSON Server</h1>
+  <ul>
+    {{#each routes}}
+      <li><a href="/{{this.name}}">/{{this.name}}</a> - {{this.count}} items</li>
+    {{/each}}
+  </ul>
+</body>
+</html>

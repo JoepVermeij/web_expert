@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "express": "^5.1.0",
+    "hbs": "^4.3.1",
     "js-yaml": "^4.1.0"
   }
 }

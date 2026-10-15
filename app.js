@@ -20,6 +20,8 @@ try {
 }
 
 app.use(express.json());
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'hbs');
 
 function checkRoute(req, res, next) {
   const route = req.params.route;
@@ -34,7 +36,12 @@ function checkRoute(req, res, next) {
 }
 
 app.get('/', (req, res) => {
-  res.send(`Configured routes: ${config.routes}`);
+  const routes = config.routes.map(route => ({
+    name: route,
+    count: (config[route] || []).length
+  }));
+
+  res.render('index', { routes });
 });
 
 app.get('/:route', checkRoute, (req, res) => {
