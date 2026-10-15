@@ -35,6 +35,16 @@ function checkRoute(req, res, next) {
   next();
 }
 
+function checkBody(req, res, next) {
+  if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    return res.status(400).json({
+      error: 'Body must be a JSON object'
+    });
+  }
+
+  next();
+}
+
 // ?embed=owners uses the relationship with foreignKey ownerIds
 function embedRecord(record, route, embed) {
   const relationships = config.relationships?.[route] || [];
@@ -83,6 +93,56 @@ app.get('/:route/:id', checkRoute, (req, res) => {
   }
 
   res.json(embedRecord(record, route, embed));
+});
+
+app.post('/:route', checkRoute, checkBody, (req, res) => {
+  const route = req.params.route;
+  const data = config[route] || [];
+
+  const id = Math.max(0, ...data.map(item => item.id)) + 1;
+  // id last, so the body cannot overwrite it
+  const record = { ...req.body, id };
+
+  data.push(record);
+  config[route] = data;
+
+  res.status(201).json(record);
+});
+
+app.put('/:route/:id', checkRoute, checkBody, (req, res) => {
+  const route = req.params.route;
+  const id = req.params.id;
+  const data = config[route] || [];
+
+  const index = data.findIndex(item => item.id == id);
+
+  if (index === -1) {
+    return res.status(404).json({
+      error: `Record with ID ${id} not found in ${route}`
+    });
+  }
+
+  data[index] = { ...req.body, id: data[index].id };
+
+  res.json(data[index]);
+});
+
+app.delete('/:route/:id', checkRoute, (req, res) => {
+  const route = req.params.route;
+  const id = req.params.id;
+  const data = config[route] || [];
+
+  const index = data.findIndex(item => item.id == id);
+
+  if (index === -1) {
+    return res.status(404).json({
+      error: `Record with ID ${id} not found in ${route}`
+    });
+  }
+
+  data.splice(index, 1);
+
+  res.status(204).end();
 });
 
 const server = app.listen(PORT, () => {
