@@ -1,4 +1,5 @@
 node_modules/
+temp/
 *.pdf
 AGENTS.md
 CLAUDE.md

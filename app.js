@@ -35,6 +35,22 @@ function checkRoute(req, res, next) {
   next();
 }
 
+// ?embed=owners uses the relationship with foreignKey ownerIds
+function embedRecord(record, route, embed) {
+  const relationships = config.relationships?.[route] || [];
+  const relation = relationships.find(rel => rel.foreignKey.replace('Ids', 's') === embed);
+
+  if (!relation) {
+    return record;
+  }
+
+  const ids = record[relation.foreignKey] || [];
+  const related = config[relation.relatedRoute] || [];
+
+  // copy, so the embedded data is not saved into config
+  return { ...record, [embed]: related.filter(item => ids.includes(item.id)) };
+}
+
 app.get('/', (req, res) => {
   const routes = config.routes.map(route => ({
     name: route,
@@ -46,14 +62,16 @@ app.get('/', (req, res) => {
 
 app.get('/:route', checkRoute, (req, res) => {
   const route = req.params.route;
+  const { embed } = req.query;
   const data = config[route] || [];
 
-  res.json(data);
+  res.json(data.map(record => embedRecord(record, route, embed)));
 });
 
 app.get('/:route/:id', checkRoute, (req, res) => {
   const route = req.params.route;
   const id = req.params.id;
+  const { embed } = req.query;
   const data = config[route] || [];
 
   const record = data.find(item => item.id == id);
@@ -64,7 +82,7 @@ app.get('/:route/:id', checkRoute, (req, res) => {
     });
   }
 
-  res.json(record);
+  res.json(embedRecord(record, route, embed));
 });
 
 const server = app.listen(PORT, () => {
